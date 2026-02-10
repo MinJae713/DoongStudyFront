@@ -2,18 +2,22 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import SignupModal from '@/components/SignupModal.vue'
+import { memberApi } from '@/apis/MemberApi'
 
-const emit = defineEmits(['login-success'])
+// const emit = defineEmits(['login-success'])
 
 const email = ref('')
 const password = ref('')
 const showSignup = ref(false)
 
 const router = useRouter()
+const memberApiStore = memberApi();
 
-function login() {
-  emit('login-success')
-  router.push('/main')
+async function login() {
+  // emit('login-success')
+  const loginResult = await memberApiStore.login(email.value, password.value);
+  if (loginResult.apiResult) router.push('/main')
+  else alert(loginResult.message);
 }
 </script>
 

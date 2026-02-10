@@ -91,7 +91,7 @@ const openDetail = (member) => {
 const withdraw = () => {
   // 실제 서비스라면 API 호출 후 이동
   alert('회원 탈퇴 처리되었습니다.')
-  router.push('/login') // ✅ 수정
+  router.push('/') // ✅ 수정
 }
 </script>
 
