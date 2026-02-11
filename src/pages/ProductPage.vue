@@ -1,56 +1,11 @@
-<template>
-  <div class="page">
-    <h1>물건 관리</h1>
-
-    <!-- 물건 목록 -->
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>이름</th>
-            <th>가격</th>
-            <th>유형</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="product in products" :key="product.id" @click="openDetail(product)">
-            <td>{{ product.id }}</td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.price }}</td>
-            <td>{{ product.type }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 물건 등록 버튼 -->
-    <button class="add-btn" @click="openCreate">물건 등록</button>
-
-    <!-- 물건 상세 모달 -->
-    <ProductDetailModal
-      v-if="modalType === 'detail'"
-      :product="selectedProduct"
-      @back="closeModal"
-      @edit="openEdit"
-    />
-
-    <!-- 물건 등록 / 수정 모달 -->
-    <ProductFormModal
-      v-if="modalType === 'create' || modalType === 'edit'"
-      :mode="modalType"
-      :product="modalType === 'edit' ? selectedProduct : null"
-      @close="closeModal"
-      @submit="saveProduct"
-      @delete="deleteProduct"
-    />
-  </div>
-</template>
-
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import ProductDetailModal from '@/components/ProductDetailModal.vue'
 import ProductFormModal from '@/components/ProductFormModal.vue'
+
+onMounted(() => {
+  console.log("상품 페이지");
+});
 
 const products = ref([
   {
@@ -107,6 +62,55 @@ const deleteProduct = () => {
   closeModal()
 }
 </script>
+
+<template>
+  <div class="page">
+    <h1>물건 관리</h1>
+
+    <!-- 물건 목록 -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>이름</th>
+            <th>가격</th>
+            <th>유형</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="product in products" :key="product.id" @click="openDetail(product)">
+            <td>{{ product.id }}</td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.price }}</td>
+            <td>{{ product.type }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 물건 등록 버튼 -->
+    <button class="add-btn" @click="openCreate">물건 등록</button>
+
+    <!-- 물건 상세 모달 -->
+    <ProductDetailModal
+      v-if="modalType === 'detail'"
+      :product="selectedProduct"
+      @back="closeModal"
+      @edit="openEdit"
+    />
+
+    <!-- 물건 등록 / 수정 모달 -->
+    <ProductFormModal
+      v-if="modalType === 'create' || modalType === 'edit'"
+      :mode="modalType"
+      :product="modalType === 'edit' ? selectedProduct : null"
+      @close="closeModal"
+      @submit="saveProduct"
+      @delete="deleteProduct"
+    />
+  </div>
+</template>
 
 <style scoped>
 .page {

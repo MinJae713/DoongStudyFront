@@ -1,3 +1,90 @@
+<script setup>
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import MemberDetailModal from '@/components/MemberDetailModal.vue'
+import { memberStore } from '@/stores/MemberStore'
+import { memberApi } from '@/apis/MemberApi'
+
+const router = useRouter()
+const memberApiStore = memberApi();
+const memberDataStore = memberStore();
+
+onMounted(() => {
+  setLoginMember();
+  setMembers();
+});
+
+const genderLabel = (gender) => {
+  switch (gender) {
+    case "MALE": return "남자"
+    case "FEMALE": return "남자"
+    default: return "-"
+  }
+}
+
+const setLoginMember = async () => {
+  const response = await memberApiStore.getMemberById(memberDataStore.loginMemberId);
+  memberDataStore.setLoginMember({
+    name: response.name ? response.name : "-",
+    age: response.age ? response.age : "-",
+    gender: response.gender ? genderLabel(response.gender) : "-",
+    address: response.address ? response.address : "-",
+  })
+}
+
+/** 회원 목록 */
+const setMembers = async () => {
+  const response = await memberApiStore.getMembers();
+  let memberList = [];
+  response.map(member => {
+    return {
+      id: member.memberId,
+      name: member.name ? member.name : "-",
+      age: member.age ? member.age : "-",
+      gender: member.gender ? genderLabel(member.gender) : "-",
+      address: member.address ? member.address : "-"
+    };
+  }).forEach(member => memberList.push(member));
+  memberDataStore.setMembers(memberList);
+}
+
+const openDetail = async (member) => {
+  const response = await memberApiStore.getMemberById(member.id);
+  memberDataStore.setSelectedMember({
+    id: response.memberId,
+    name: response.name ? response.name : "-",
+    age: response.age ? response.age : "-",
+    gender: response.gender ? genderLabel(response.gender) : "-",
+    address: response.address ? response.address : "-",
+    email: response.email ? response.email : "-",
+    createdAt: response.createdAt ? response.createdAt : "-"
+  })
+}
+
+const logout = () => {
+  alert("로그아웃 API 구현 예정");
+  clearPage();
+}
+
+const withdraw = async () => {
+  // 실제 서비스라면 API 호출 후 이동;
+  if (!confirm("정말 탈퇴하겠습니까?")) return;
+  const response = 
+    await memberApiStore.deleteMember(
+      memberDataStore.loginMemberId);
+  if (response && response.apiResult) {
+    alert('회원 탈퇴 처리되었습니다.');
+    clearPage();
+  }
+}
+const clearPage = () => {
+  memberDataStore.setLoginMemberId(null);
+  memberDataStore.setLoginMember({});
+  memberDataStore.setMembers([]);
+  router.push('/') // ✅ 수정
+}
+</script>
+
 <template>
   <div class="page">
     <!-- 로그인 회원 정보 -->
@@ -7,22 +94,22 @@
       <div class="login-info">
         <div class="info-row">
           <span class="label">이름</span>
-          <span>{{ loginUser.name }}</span>
+          <span>{{ memberDataStore.loginMember.name }}</span>
         </div>
         <div class="info-row">
           <span class="label">나이</span>
-          <span>{{ loginUser.age }}</span>
+          <span>{{ memberDataStore.loginMember.age }}</span>
         </div>
         <div class="info-row">
           <span class="label">성별</span>
-          <span>{{ loginUser.gender }}</span>
+          <span>{{ memberDataStore.loginMember.gender }}</span>
         </div>
         <div class="info-row">
           <span class="label">주소</span>
-          <span>{{ loginUser.address }}</span>
+          <span>{{ memberDataStore.loginMember.address }}</span>
         </div>
       </div>
-
+      <button class="logout-btn" @click="logout">로그아웃</button>
       <button class="withdraw-btn" @click="withdraw">회원 탈퇴</button>
     </div>
 
@@ -41,7 +128,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="member in members" :key="member.id" @click="openDetail(member)">
+          <tr v-for="member in memberDataStore.members" :key="member.id" @click="openDetail(member)">
             <td>{{ member.id }}</td>
             <td>{{ member.name }}</td>
             <td>{{ member.age }}</td>
@@ -54,46 +141,12 @@
 
     <!-- 회원 상세 모달 -->
     <MemberDetailModal
-      v-if="selectedMember"
-      :member="selectedMember"
-      @back="selectedMember = null"
+      v-if="memberDataStore.selectedMember"
+      :member="memberDataStore.selectedMember"
+      @back="memberDataStore.setSelectedMember(null)"
     />
   </div>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import MemberDetailModal from '@/components/MemberDetailModal.vue'
-
-const router = useRouter()
-
-/** 로그인 회원 정보 (mock) */
-const loginUser = ref({
-  name: '홍길동',
-  age: 29,
-  gender: '남',
-  address: '서울시 강남구',
-})
-
-/** 회원 목록 */
-const members = ref([
-  { id: 1, name: '김철수', age: 32, gender: '남', address: '부산시' },
-  { id: 2, name: '이영희', age: 27, gender: '여', address: '대구시' },
-])
-
-const selectedMember = ref(null)
-
-const openDetail = (member) => {
-  selectedMember.value = member
-}
-
-const withdraw = () => {
-  // 실제 서비스라면 API 호출 후 이동
-  alert('회원 탈퇴 처리되었습니다.')
-  router.push('/') // ✅ 수정
-}
-</script>
 
 <style scoped>
 .page {
@@ -132,7 +185,7 @@ const withdraw = () => {
 }
 
 /* 회원 탈퇴 버튼 */
-.withdraw-btn {
+.logout-btn {
   align-self: flex-start;
   padding: 8px 14px;
   border: none;
@@ -140,10 +193,25 @@ const withdraw = () => {
   background: #ef4444;
   color: white;
   cursor: pointer;
+  margin-right: 10px;
+}
+
+.logout-btn:hover {
+  background: peru;
+}
+
+.withdraw-btn {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #000000;
+  color: white;
+  cursor: pointer;
 }
 
 .withdraw-btn:hover {
-  background: #dc2626;
+  background: purple;
 }
 
 /* 회원 테이블 */

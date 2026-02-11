@@ -1,7 +1,9 @@
 <script setup>
+import { memberApi } from '@/apis/MemberApi';
 import { reactive } from 'vue'
 
 const emit = defineEmits(['close'])
+const memberApiStore = memberApi();
 
 const form = reactive({
   email: '',
@@ -12,10 +14,13 @@ const form = reactive({
   address: '',
 })
 
-function submit() {
+async function submit() {
   // 실제로는 여기서 API 호출
-  console.log('회원가입 정보:', form)
-  emit('close')
+  const response = await memberApiStore.register(form);
+  if (response.apiResult) {
+    alert("회원가입이 완료되었습니다!");
+    emit('close');
+  } else alert(response.data.message);
 }
 
 function cancel() {
@@ -28,20 +33,21 @@ function cancel() {
     <div class="modal">
       <h2 class="title">회원가입</h2>
 
-      <div class="form">
+      <!-- form으로 감싸기 -->
+      <form class="form" @submit.prevent="submit">
         <label>
           이메일
-          <input type="email" v-model="form.email" />
+          <input type="email" v-model="form.email" required />
         </label>
 
         <label>
           비밀번호
-          <input type="password" v-model="form.password" />
+          <input type="password" v-model="form.password" required />
         </label>
 
         <label>
           이름
-          <input type="text" v-model="form.name" />
+          <input type="text" v-model="form.name" required />
         </label>
 
         <label>
@@ -51,10 +57,10 @@ function cancel() {
 
         <label>
           성별
-          <select v-model="form.gender">
+          <select v-model="form.gender" required >
             <option disabled value="">선택</option>
-            <option value="남">남</option>
-            <option value="여">여</option>
+            <option value="MALE">남</option>
+            <option value="FEMALE">여</option>
           </select>
         </label>
 
@@ -62,12 +68,16 @@ function cancel() {
           주소
           <input type="text" v-model="form.address" />
         </label>
-      </div>
 
-      <div class="actions">
-        <button class="btn btn-gray" @click="cancel">취소</button>
-        <button class="btn btn-primary" @click="submit">등록</button>
-      </div>
+        <div class="actions">
+          <button type="button" class="btn btn-gray" @click="cancel">
+            취소
+          </button>
+          <button type="submit" class="btn btn-primary">
+            등록
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
