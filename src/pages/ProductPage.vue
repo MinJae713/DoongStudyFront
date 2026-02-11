@@ -1,66 +1,19 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import ProductDetailModal from '@/components/ProductDetailModal.vue'
 import ProductFormModal from '@/components/ProductFormModal.vue'
+import { thingStore } from '@/stores/ThingStore';
+
+const thingDataStore = thingStore();
 
 onMounted(() => {
-  console.log("상품 페이지");
+  thingDataStore.resetThings();
 });
 
-const products = ref([
-  {
-    id: 1,
-    name: '기타',
-    price: 100000,
-    description: '어쿠스틱 기타',
-    type: '악기',
-    createdAt: '2026-02-01',
-  },
-])
-
-const selectedProduct = ref(null)
-const modalType = ref(null)
-
-/* ===== 모달 제어 ===== */
-
-const openDetail = (product) => {
-  selectedProduct.value = product
-  modalType.value = 'detail'
+const onModalOpen = (thing) => {
+  thingDataStore.openDetail(thing);
 }
 
-const openCreate = () => {
-  selectedProduct.value = null
-  modalType.value = 'create'
-}
-
-const openEdit = () => {
-  modalType.value = 'edit'
-}
-
-const closeModal = () => {
-  selectedProduct.value = null
-  modalType.value = null
-}
-
-/* ===== CRUD ===== */
-
-const saveProduct = (data) => {
-  if (modalType.value === 'edit') {
-    Object.assign(selectedProduct.value, data)
-  } else {
-    products.value.push({
-      id: Date.now(),
-      createdAt: new Date().toISOString().slice(0, 10),
-      ...data,
-    })
-  }
-  closeModal()
-}
-
-const deleteProduct = () => {
-  products.value = products.value.filter((p) => p.id !== selectedProduct.value.id)
-  closeModal()
-}
 </script>
 
 <template>
@@ -76,38 +29,42 @@ const deleteProduct = () => {
             <th>이름</th>
             <th>가격</th>
             <th>유형</th>
+            <th>소유주</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in products" :key="product.id" @click="openDetail(product)">
-            <td>{{ product.id }}</td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.price }}</td>
-            <td>{{ product.type }}</td>
+          <tr v-for="thing in thingDataStore.things" 
+            :key="thing.id" @click="onModalOpen(thing)">
+            <td>{{ thing.id }}</td>
+            <td>{{ thing.name }}</td>
+            <td>{{ thing.price }}</td>
+            <td>{{ thing.type }}</td>
+            <td>{{ thing.ownerName }}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- 물건 등록 버튼 -->
-    <button class="add-btn" @click="openCreate">물건 등록</button>
+    <button class="add-btn" @click="thingDataStore.openCreate">물건 등록</button>
 
     <!-- 물건 상세 모달 -->
     <ProductDetailModal
-      v-if="modalType === 'detail'"
-      :product="selectedProduct"
-      @back="closeModal"
-      @edit="openEdit"
+      v-if="thingDataStore.modalType === 'detail'"
+      :product="thingDataStore.selectedThing"
+      @back="thingDataStore.closeModal"
+      @edit="thingDataStore.openEdit"
     />
 
     <!-- 물건 등록 / 수정 모달 -->
     <ProductFormModal
-      v-if="modalType === 'create' || modalType === 'edit'"
-      :mode="modalType"
-      :product="modalType === 'edit' ? selectedProduct : null"
-      @close="closeModal"
-      @submit="saveProduct"
-      @delete="deleteProduct"
+      v-if="thingDataStore.modalType === 'create' || thingDataStore.modalType === 'edit'"
+      :mode="thingDataStore.modalType"
+      :product="thingDataStore.modalType === 'edit' ? 
+        thingDataStore.selectedThing : null"
+      @close="thingDataStore.closeModal"
+      @submit="thingDataStore.saveProduct"
+      @delete="thingDataStore.deleteProduct"
     />
   </div>
 </template>
@@ -154,5 +111,9 @@ tbody tr:hover {
   background: #2563eb;
   color: white;
   border: none;
+}
+
+.add-btn:hover {
+  background: #1d4ed8;
 }
 </style>

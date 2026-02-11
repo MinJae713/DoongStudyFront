@@ -3,12 +3,12 @@ import instance, {contextPath} from "./CommonAxios";
 
 export const thingApi = defineStore("thingApi", () => {
   const domain = 'thing';
-  const getThings = async () => {
-    const response = await instance.get(`${contextPath}/${domain}`);
+  const getThings = async (memberId) => {
+    const response = await instance.get(`${contextPath}/${domain}/${memberId}`);
     return response.data;
   }
-  const getThingById = async (thingId) => {
-    const response = await instance.get(`${contextPath}/${domain}/${thingId}`);
+  const getThingById = async (thingId, memberId) => {
+    const response = await instance.get(`${contextPath}/${domain}/${thingId}/${memberId}`);
     return response.data;
   }
   const createThing = async (thingCreateForm) => {

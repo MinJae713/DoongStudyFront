@@ -197,7 +197,7 @@ const clearPage = () => {
 }
 
 .logout-btn:hover {
-  background: peru;
+  background: #dc2626;
 }
 
 .withdraw-btn {

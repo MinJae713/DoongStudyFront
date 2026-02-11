@@ -32,11 +32,15 @@ defineEmits(['back', 'edit'])
           <span class="label">생성 일자</span>
           <span>{{ product.createdAt }}</span>
         </div>
+        <div class="row">
+          <span class="label">소유주</span>
+          <span>{{ product.memberName }}</span>
+        </div>
       </div>
 
       <div class="actions">
         <button class="btn-back" @click="$emit('back')">뒤로 가기</button>
-        <button class="btn-primary" @click="$emit('edit')">물건 수정</button>
+        <button v-if="product.isOwn" class="btn-primary" @click="$emit('edit')">물건 수정</button>
       </div>
     </div>
   </div>
@@ -98,6 +102,10 @@ defineEmits(['back', 'edit'])
   border: none;
 }
 
+.btn-back:hover {
+  background: #d1d5db;
+}
+
 .btn-primary {
   padding: 8px 14px;
   border-radius: 6px;
@@ -105,4 +113,9 @@ defineEmits(['back', 'edit'])
   color: white;
   border: none;
 }
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
 </style>

@@ -8,17 +8,29 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit', 'delete'])
 
+const labelToType = (label) => {
+  switch (label) {
+    case "악기": return "INSTRUMENT"
+    case "도서": return "BOOK"
+    case "컴퓨터": return "COMPUTER"
+    default: return "ETC"
+  }
+}
+
 const form = reactive({
   name: '',
   description: '',
   price: '',
-  type: '악기',
+  type: '',
 })
 
 watch(
   () => props.product,
-  (p) => {
-    if (p) Object.assign(form, p)
+  (thing) => {
+    if (thing) {
+      thing.type = labelToType(thing.type);
+      Object.assign(form, thing);
+    }
   },
   { immediate: true },
 )
@@ -32,43 +44,46 @@ watch(
       </h2>
 
       <!-- 게시판 스타일 폼 -->
-      <div class="form">
-        <div class="form-group">
-          <label>이름</label>
-          <input v-model="form.name" placeholder="물건 이름을 입력하세요" />
+      <form @submit.prevent="emit('submit', form)">
+        <div class="form">
+          <div class="form-group">
+            <label>이름</label>
+            <input v-model="form.name" placeholder="물건 이름을 입력하세요" required/>
+          </div>
+
+          <div class="form-group">
+            <label>설명</label>
+            <textarea v-model="form.description" placeholder="물건 설명을 입력하세요" />
+          </div>
+
+          <div class="form-group">
+            <label>가격</label>
+            <input type="number" v-model="form.price" placeholder="가격을 입력하세요" required/>
+          </div>
+
+          <div class="form-group">
+            <label>물건 유형</label>
+            <select v-model="form.type" required>
+              <option disabled value="">선택</option>
+              <option value="INSTRUMENT">악기</option>
+              <option value="BOOK">도서</option>
+              <option value="COMPUTER">컴퓨터</option>
+              <option value="ETC">기타</option>
+            </select>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>설명</label>
-          <textarea v-model="form.description" placeholder="물건 설명을 입력하세요" />
+        <!-- 버튼 영역 -->
+        <div class="actions">
+          <button type="button" class="btn-back" @click="emit('close')">취소</button>
+
+          <button type="submit" class="btn-primary">
+            {{ mode === 'create' ? '등록' : '수정' }}
+          </button>
+
+          <button type="button" v-if="mode === 'edit'" class="btn-danger" @click="emit('delete')">삭제</button>
         </div>
-
-        <div class="form-group">
-          <label>가격</label>
-          <input type="number" v-model="form.price" placeholder="가격을 입력하세요" />
-        </div>
-
-        <div class="form-group">
-          <label>물건 유형</label>
-          <select v-model="form.type">
-            <option>악기</option>
-            <option>책</option>
-            <option>컴퓨터</option>
-            <option>기타</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- 버튼 영역 -->
-      <div class="actions">
-        <button class="btn-back" @click="emit('close')">취소</button>
-
-        <button class="btn-primary" @click="emit('submit', form)">
-          {{ mode === 'create' ? '등록' : '수정' }}
-        </button>
-
-        <button v-if="mode === 'edit'" class="btn-danger" @click="emit('delete')">삭제</button>
-      </div>
+      </form>
     </div>
   </div>
 </template>
