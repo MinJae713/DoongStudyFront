@@ -14,10 +14,13 @@ const memberApiStore = memberApi()
 const memberDataStore = memberStore();
 
 async function login() {
-  const loginResult = await memberApiStore.login(email.value, password.value)
-  if (loginResult.apiResult) {
+  const loginResult = await memberApiStore.login(email.value, password.value);
+  const localStorage = window.localStorage;
+  if (loginResult) {
     alert(`${loginResult.name}님 환영합니다!`);
     memberDataStore.setLoginMemberId(loginResult.memberId);
+    localStorage.setItem("accessToken", "Bearer "+loginResult.accessToken);
+    localStorage.setItem("refreshToken", loginResult.refreshToken);
     router.push('/main');
   }
   else alert(loginResult.message)

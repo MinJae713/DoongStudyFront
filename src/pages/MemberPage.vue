@@ -1,17 +1,18 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MemberDetailModal from '@/components/MemberDetailModal.vue'
 import { memberStore } from '@/stores/MemberStore'
 import { memberApi } from '@/apis/MemberApi'
 
-const router = useRouter()
+const router = useRouter();
 const memberApiStore = memberApi();
 const memberDataStore = memberStore();
+const localStorage = window.localStorage;
 
 onMounted(() => {
-  setLoginMember();
-  setMembers();
+  const setted = setLoginMember();
+  if (setted) setMembers();
 });
 
 const genderLabel = (gender) => {
@@ -24,46 +25,61 @@ const genderLabel = (gender) => {
 
 const setLoginMember = async () => {
   const response = await memberApiStore.getMemberById(memberDataStore.loginMemberId);
-  memberDataStore.setLoginMember({
-    name: response.name ? response.name : "-",
-    age: response.age ? response.age : "-",
-    gender: response.gender ? genderLabel(response.gender) : "-",
-    address: response.address ? response.address : "-",
-  })
+  if (response) {
+    memberDataStore.setLoginMember({
+      name: response.name ? response.name : "-",
+      age: response.age ? response.age : "-",
+      gender: response.gender ? genderLabel(response.gender) : "-",
+      address: response.address ? response.address : "-",
+    });
+    return true;
+  }
+  else {
+    clearPage();
+    return false;
+  }
 }
 
 /** 회원 목록 */
 const setMembers = async () => {
   const response = await memberApiStore.getMembers();
-  let memberList = [];
-  response.map(member => {
-    return {
-      id: member.memberId,
-      name: member.name ? member.name : "-",
-      age: member.age ? member.age : "-",
-      gender: member.gender ? genderLabel(member.gender) : "-",
-      address: member.address ? member.address : "-"
-    };
-  }).forEach(member => memberList.push(member));
-  memberDataStore.setMembers(memberList);
+  if (response) {
+    let memberList = [];
+    response.map(member => {
+      return {
+        id: member.memberId,
+        name: member.name ? member.name : "-",
+        age: member.age ? member.age : "-",
+        gender: member.gender ? genderLabel(member.gender) : "-",
+        address: member.address ? member.address : "-"
+      };
+    }).forEach(member => memberList.push(member));
+    memberDataStore.setMembers(memberList);
+  } else clearPage();
+  
 }
 
 const openDetail = async (member) => {
   const response = await memberApiStore.getMemberById(member.id);
-  memberDataStore.setSelectedMember({
-    id: response.memberId,
-    name: response.name ? response.name : "-",
-    age: response.age ? response.age : "-",
-    gender: response.gender ? genderLabel(response.gender) : "-",
-    address: response.address ? response.address : "-",
-    email: response.email ? response.email : "-",
-    createdAt: response.createdAt ? response.createdAt : "-"
-  })
+  if (response)
+    memberDataStore.setSelectedMember({
+      id: response.memberId,
+      name: response.name ? response.name : "-",
+      age: response.age ? response.age : "-",
+      gender: response.gender ? genderLabel(response.gender) : "-",
+      address: response.address ? response.address : "-",
+      email: response.email ? response.email : "-",
+      createdAt: response.createdAt ? response.createdAt : "-"
+    });
+  else clearPage();
 }
 
-const logout = () => {
-  alert("로그아웃 API 구현 예정");
-  clearPage();
+const logout = async () => {
+  if (confirm("정말 로그아웃 하겠습니까?")) {
+    const response = await memberApiStore.logout();
+    alert("로그아웃 되었습니다!");
+    clearPage();
+  }
 }
 
 const withdraw = async () => {
@@ -75,13 +91,18 @@ const withdraw = async () => {
   if (response && response.apiResult) {
     alert('회원 탈퇴 처리되었습니다.');
     clearPage();
+  } else {
+    alert('세션이 만료되어 초기 페이지로 돌아갑니다.');
+    clearPage();
   }
 }
 const clearPage = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
   memberDataStore.setLoginMemberId(null);
   memberDataStore.setLoginMember({});
   memberDataStore.setMembers([]);
-  router.push('/') // ✅ 수정
+  router.push('/'); // ✅ 수정
 }
 </script>
 
