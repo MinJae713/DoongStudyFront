@@ -14,16 +14,20 @@ const memberApiStore = memberApi()
 const memberDataStore = memberStore();
 
 async function login() {
-  const loginResult = await memberApiStore.login(email.value, password.value);
-  const localStorage = window.localStorage;
-  if (loginResult) {
-    alert(`${loginResult.name}님 환영합니다!`);
-    memberDataStore.setLoginMemberId(loginResult.memberId);
-    localStorage.setItem("accessToken", "Bearer "+loginResult.accessToken);
-    localStorage.setItem("refreshToken", loginResult.refreshToken);
-    router.push('/main');
+  try {
+    const loginResult = await memberApiStore.login(email.value, password.value);
+    const localStorage = window.localStorage;
+    if (loginResult) {
+      alert(`${loginResult.name}님 환영합니다!`);
+      memberDataStore.setLoginMemberId(loginResult.memberId);
+      localStorage.setItem("accessToken", "Bearer "+loginResult.accessToken);
+      localStorage.setItem("refreshToken", loginResult.refreshToken);
+      router.push('/main');
+    }
+    else alert(loginResult.message);
+  } catch (e) {
+    alert('이메일 혹은 비밀번호가 일치하지 않습니다');
   }
-  else alert(loginResult.message)
 }
 </script>
 
